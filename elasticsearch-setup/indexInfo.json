@@ -1,0 +1,64 @@
+{
+    "settings": {
+        "analysis": {
+            "analyzer": {
+              "nori_analyzer": {
+                "tokenizer": "nori_tokenizer"
+              }
+            }
+        },
+        "number_of_shards": 1,
+        "number_of_replicas": 1
+    },
+    "mappings": {
+        "properties": {
+            "url": {
+                "type": "keyword"
+            },
+            "position": {
+                "type": "text",
+                "analyzer": "nori_analyzer"
+            },
+            "company": {
+                "type": "keyword"
+            },
+            "contents": {
+                "properties": {
+                    "benefits": {
+                        "type": "text",
+                        "analyzer": "nori_analyzer"
+                    },
+                    "intro": {
+                        "type": "text",
+                        "analyzer": "nori_analyzer"
+                    },
+                    "main_tasks": {
+                        "type": "text",
+                        "analyzer": "nori_analyzer"
+                    },
+                    "preferred_points": {
+                        "type": "text",
+                        "analyzer": "nori_analyzer"
+                    },
+                    "requirements": {
+                        "type": "text",
+                        "analyzer": "nori_analyzer"
+                    },
+                    "address": {
+                        "type": "keyword"
+                    },
+                    "company_tags": {
+                        "type": "keyword"
+                    },
+                    "skill_tags": {
+                        "type": "keyword"
+                    }
+                }
+            },
+            "scraped_time": {
+                "type": "date",
+                "format": "yyyy-MM-dd"
+            }
+        }
+    }
+}
