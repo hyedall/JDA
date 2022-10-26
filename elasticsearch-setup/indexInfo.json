@@ -56,8 +56,7 @@
                 }
             },
             "scraped_time": {
-                "type": "date",
-                "format": "yyyy-MM-dd"
+                "type": "keyword"
             }
         }
     }
