@@ -62,3 +62,9 @@
 ```sh
 python3 manage.py init
 ```
+
+- docker-compose
+
+```sh
+docker-compose up --build
+```
