@@ -1,16 +1,19 @@
 from datetime import datetime
-from typing import Dict
 
 class JobPosting:
+    id: str
     url: str
     company: str
     position: str
-    contents: Dict
+    contents: dict
+    validation: bool
     scraped_time: str
 
-    def __init__(self, url, company, position, contents, scraped_time=datetime.now().strftime('%Y-%m-%d')):
+    def __init__(self, id, url, company, position, contents):
+        self.id = id
         self.url = url
         self.company = company
         self.position = position
         self.contents = contents
-        self.scraped_time = scraped_time
+        self.validation = True
+        self.scraped_time = datetime.now().strftime('%Y-%m-%d')

@@ -132,3 +132,5 @@ data
 logs
 webserver_config.py
 ids.txt
+airflow.db
+airflow-webserver.pid

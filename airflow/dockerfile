@@ -1,0 +1,16 @@
+FROM python:3.8.10-buster
+
+WORKDIR /usr/local/airflow
+
+COPY requirements.txt .
+COPY airflow.cfg .
+COPY entrypoint.sh .
+
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
+
+ENV AIRFLOW_HOME "/usr/local/airflow"
+
+RUN chmod 755 ./entrypoint.sh
+
+CMD [ "./entrypoint.sh" ]

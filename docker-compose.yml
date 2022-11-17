@@ -1,8 +1,31 @@
 version: '3.6'
 services:
+  app:
+    container_name: app
+    build: ./app
+    restart: always
+    ports:
+      - 80:8000
+    volumes:
+      - ./app/static:/app/static
+      - ./app/templates:/app/templates
+
+  airflow:
+    container_name: airflow
+    build: ./airflow
+    restart: unless-stopped
+    ports:
+      - 8080:8080
+    volumes:
+      - ./airflow/dags:/usr/local/airflow/dags
+      - ./airflow/modules:/usr/local/airflow/modules
+
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.9.1
+    build:
+      context: ./elasticsearch
+      dockerfile: ./dockerfile
     container_name: elasticsearch
+    restart: always
     environment:
       - discovery.type=single-node
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
@@ -11,15 +34,16 @@ services:
         soft: -1
         hard: -1
     volumes:
-      - data:/usr/share/elasticsearch/data
+      - elasticsearch:/usr/share/elasticsearch/data
     ports:
       - 9200:9200
     networks:
-      - elastic
+      - JDA
 
   kibana:
     image: docker.elastic.co/kibana/kibana:7.9.1
     container_name: kibana
+    restart: always
     ports:
       - 5601:5601
     environment:
@@ -27,12 +51,23 @@ services:
     depends_on:
       - elasticsearch
     networks:
-      - elastic
+      - JDA
+  
+  mongo:
+    container_name: mongo
+    image: "mongo"
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo:/data/db
+    command: mongod
+    networks:
+      - JDA
     
 volumes:
-  data:
-    driver: local
+  mongo:
+  elasticsearch:
 
 networks:
-  elastic:
+  JDA:
     driver: bridge

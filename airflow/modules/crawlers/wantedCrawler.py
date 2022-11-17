@@ -1,17 +1,19 @@
-import json
 import random
 import time
 import requests
+from collections import defaultdict
+from pymongo import MongoClient
 from typing import List
-from collections import Counter
 from tqdm import tqdm
-from config import JobPosting
+from .config import JobPosting
 from bs4 import BeautifulSoup as bs
 from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
-def wantedLinkCrawlling(url: str):
+def wantedLinkCrawling():
+    url = "https://www.wanted.co.kr/wdlist/518?country=all&job_sort=company.response_rate_order&years=-1"
+
     # Chrome Driver Loading
     chrome_options = ChromeOptions()
     chrome_options.add_argument('--headless')
@@ -24,7 +26,7 @@ def wantedLinkCrawlling(url: str):
     driver.maximize_window()
     driver.implicitly_wait(10)
     driver.get(url)
-    
+
     # 무한 스크롤
     last_height = driver.execute_script("return document.body.scrollHeight")
     
@@ -61,7 +63,7 @@ def wantedLinkCrawlling(url: str):
 
     return ids
 
-def wantedContentsCrawlling(id: str):
+def wantedContentsCrawling(id: str):
     api_url = f"https://www.wanted.co.kr/api/v4/jobs/{id}"
     data = requests.get(api_url).json()
 
@@ -89,40 +91,37 @@ def wantedContentsCrawlling(id: str):
     except KeyError:
         contents["skill_tags"] = None
     
-    return JobPosting(url, company, position, contents)
+    return JobPosting(id, url, company, position, contents)
 
-def wantedIdClassify(wanted_ids: List[str]):
-    url = "http://localhost:9200/wanted/_search"
-    query = {
-        "_source": ["url"],
-        "size": 10000,
-        "query": {
-            "match_all": {}
-        }
-    }
-    headers = {'content-type': 'application/json'}
-    
-    data = requests.get(url=url, data=json.dumps(query), headers=headers).json()
-    
-    # 현재 elasticsearch에 저장 되어 있는 url 정보 가져옴.
-    present_ids = [item["_source"]["url"][28:] for item in data["hits"]["hits"]]
-    # 현재 정보와 크롤링한 정보에 대하여 Counter.
-    counter = Counter(wanted_ids + present_ids)
-    # 새롭게 크롤링된 정보만 분류.
-    ids = [id for id in counter.keys() if counter[id] == 1]
-    
-    return ids
-    
-if __name__ == "__main__":
-    # 공고 링크들이 있는 url
-    url = "https://www.wanted.co.kr/wdlist/518?country=all&job_sort=company.response_rate_order&years=-1"
+def wantedIdClassify(wanted_ids: List[str], client: MongoClient):
+    db = client.JDA
+    collection = db.wanted
+    tmp = defaultdict(int)
+
+    # 현재 Mongo DB에 저장 되어 있는 공고들의 id 정보 가져옴.
+    for posting in collection.find({"validation": True}): tmp[posting["id"]] = -1
+    # 현재 DB 데이터와 wanted 데이터에 대해 분류 Dictionary
+    for wanted_id in wanted_ids: tmp[wanted_id] += 1
+
+    return tmp
+
+def wantedJdCrawling(**context):
+    # Mongo DB Client
+    client = MongoClient(host='localhost', port=27017)
     # 원티드 링크만 크롤링
-    wanted_ids = wantedLinkCrawlling(url)
-    # 크롤링한 링크들 중 필요한 공고만 분류
-    ids = wantedIdClassify(wanted_ids)
-    
-    # 필요한 공고들에 대해서 내용 크롤링하여 elasticsearch에 저장
+    wanted_ids = context['ti'].xcom_pull(task_ids='wantedLinkCrawling')
+    # 크롤링한 링크들 중 삽입할 공고, 비활성화할 공고 분류
+    ids = wantedIdClassify(wanted_ids, client)
+    postings = {
+        "insert": [],
+        "update": []
+    }
     for id in tqdm(ids):
-        posting = wantedContentsCrawlling(id)
-        requests.post(url="http://localhost:9200/wanted/_doc", data=json.dumps(posting.__dict__), headers={'content-type': 'application/json'})
-        time.sleep(random.uniform(1.5, 2.0))
+        if ids[id] == 1:
+            posting = wantedContentsCrawling(id)
+            postings["insert"].append(posting.__dict__)
+            time.sleep(random.uniform(1.5, 2.0))
+        elif ids[id] == -1:
+            postings["update"].append(id)
+    
+    return postings

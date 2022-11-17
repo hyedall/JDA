@@ -12,6 +12,9 @@
   },
   "mappings": {
     "properties": {
+      "id": {
+        "type": "keyword"
+      },
       "url": {
         "type": "keyword"
       },
