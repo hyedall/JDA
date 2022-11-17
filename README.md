@@ -23,7 +23,7 @@
 
 <!-- ARCHITECTURE DIAGRAM -->
 ## Architecture Diagram
-![System Architecture](./img/Architecture.png)
+![System Architecture](./img/architecture.png)
 
 <!-- HOW IT WORKS -->
 ## How it works
