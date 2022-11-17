@@ -9,16 +9,25 @@ services:
     volumes:
       - ./app/static:/app/static
       - ./app/templates:/app/templates
+    networks:
+      - JDA
 
   airflow:
     container_name: airflow
     build: ./airflow
     restart: unless-stopped
+    environment:
+      - MONGO_HOST=mongo
+      - MONGO_PORT=27017
+      - ELASTICSEARCH_HOST=elasticsearch
+      - ELASTICSEARCH_PORT=9200
     ports:
       - 8080:8080
     volumes:
       - ./airflow/dags:/usr/local/airflow/dags
       - ./airflow/modules:/usr/local/airflow/modules
+    networks:
+      - JDA
 
   elasticsearch:
     build:

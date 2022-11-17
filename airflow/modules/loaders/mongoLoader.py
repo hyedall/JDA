@@ -1,9 +1,13 @@
+import sys
+import os
+sys.path.append(os.environ["AIRFLOW_HOME"])
+from modules.config import MONGO_HOST, MONGO_PORT
 from pymongo import MongoClient
 
 def mongoLoad(**context):
     data = context['ti'].xcom_pull(task_ids='wantedJdCrawling')
 
-    client = MongoClient(host="localhost", port=27017)
+    client = MongoClient(host=MONGO_HOST, port=MONGO_PORT)
     wanted = client.JDA.wanted
 
     # MongoDB data insert

@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.append(os.environ["AIRFLOW_HOME"])
+from modules.config import MONGO_HOST, MONGO_PORT, ELASTICSEARCH_HOST, ELASTICSEARCH_PORT
 from elasticsearch import Elasticsearch, helpers
 from pymongo import MongoClient
 
@@ -12,8 +16,8 @@ def mongoFetch(client: MongoClient, db: str, collection: str, query: dict=None):
 
 # MongoDB의 데이터를 ES로 적재
 def esLoad():
-    mongo = MongoClient(host="localhost", port=27017)
-    es = Elasticsearch("http://localhost:9200")
+    mongo = MongoClient(host=MONGO_HOST, port=MONGO_PORT)
+    es = Elasticsearch(f"http://{ELASTICSEARCH_HOST}:{ELASTICSEARCH_PORT}")
     db = "JDA"
     collection = "wanted"
     mongo_query = {"validation": True}

@@ -1,3 +1,6 @@
+import sys
+import os
+sys.path.append(os.environ["AIRFLOW_HOME"])
 import random
 import time
 import requests
@@ -5,7 +8,7 @@ from collections import defaultdict
 from pymongo import MongoClient
 from typing import List
 from tqdm import tqdm
-from .config import JobPosting
+from modules.config import JobPosting, MONGO_HOST, MONGO_PORT
 from bs4 import BeautifulSoup as bs
 from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver.chrome.service import Service
@@ -107,7 +110,7 @@ def wantedIdClassify(wanted_ids: List[str], client: MongoClient):
 
 def wantedJdCrawling(**context):
     # Mongo DB Client
-    client = MongoClient(host='localhost', port=27017)
+    client = MongoClient(host=MONGO_HOST, port=MONGO_PORT)
     # 원티드 링크만 크롤링
     wanted_ids = context['ti'].xcom_pull(task_ids='wantedLinkCrawling')
     # 크롤링한 링크들 중 삽입할 공고, 비활성화할 공고 분류
